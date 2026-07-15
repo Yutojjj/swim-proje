@@ -31,6 +31,7 @@ function App() {
   const [error, setError] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isDockHidden, setIsDockHidden] = useState(false);
+  const swipeSurfaceRef = useRef(null);
   const swipeStartRef = useRef(null);
 
   const filteredRecords = useMemo(() => {
@@ -99,45 +100,8 @@ function App() {
     if (nextIndex !== currentIndex) setActiveTab(tabs[nextIndex].id);
   }
 
-  function handleSwipeStart(event) {
-    if (event.pointerType === "mouse" || event.target.closest("button,input,select,textarea,a,.tabs,.controls,.memberFilterBar,.eventFilterBar,.meetModeTabs,.modalBackdrop")) {
-      swipeStartRef.current = null;
-      return;
-    }
-    swipeStartRef.current = {
-      x: event.clientX,
-      y: event.clientY
-    };
-  }
-
-  function handleSwipeEnd(event) {
-    const start = swipeStartRef.current;
-    swipeStartRef.current = null;
-    if (!start) return;
-    const dx = event.clientX - start.x;
-    const dy = event.clientY - start.y;
-    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
-    moveActiveTab(dx < 0 ? 1 : -1);
-  }
-
-  function handleTouchStart(event) {
-    if (event.target.closest("button,input,select,textarea,a,.tabs,.controls,.memberFilterBar,.eventFilterBar,.meetModeTabs,.modalBackdrop")) {
-      swipeStartRef.current = null;
-      return;
-    }
-    const touch = event.touches[0];
-    swipeStartRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
-  }
-
-  function handleTouchEnd(event) {
-    const start = swipeStartRef.current;
-    swipeStartRef.current = null;
-    const touch = event.changedTouches[0];
-    if (!start || !touch) return;
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-    if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
-    moveActiveTab(dx < 0 ? 1 : -1);
+  function shouldIgnoreSwipe(target) {
+    return Boolean(target.closest("input,select,textarea,a,.tabs,.controls,.memberFilterBar,.eventFilterBar,.meetModeTabs,.modalBackdrop,.memberLongPressMenu"));
   }
 
   useEffect(() => {
@@ -190,17 +154,79 @@ function App() {
     };
   }, []);
 
-  return (
-    <main
-      className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}
-      onPointerDown={handleSwipeStart}
-      onPointerUp={handleSwipeEnd}
-      onPointerCancel={() => {
+  useEffect(() => {
+    const surface = swipeSurfaceRef.current;
+    if (!surface) return undefined;
+
+    function touchStart(event) {
+      if (!event.touches.length || shouldIgnoreSwipe(event.target)) {
         swipeStartRef.current = null;
-      }}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
+        return;
+      }
+      const touch = event.touches[0];
+      swipeStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        time: Date.now(),
+        locked: "",
+        deltaX: 0,
+        dragging: false
+      };
+    }
+
+    function touchMove(event) {
+      const start = swipeStartRef.current;
+      if (!start || !event.touches.length) return;
+      const touch = event.touches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      if (!start.locked) {
+        const ax = Math.abs(dx);
+        const ay = Math.abs(dy);
+        if (ax < 8 && ay < 8) return;
+        if (ax > ay * 1.2) start.locked = "h";
+        else if (ay > ax * 1.05) start.locked = "v";
+        else return;
+      }
+      if (start.locked !== "h") return;
+      event.preventDefault();
+      start.deltaX = dx;
+      start.dragging = true;
+    }
+
+    function touchEnd() {
+      const start = swipeStartRef.current;
+      swipeStartRef.current = null;
+      if (!start || !start.dragging) return;
+      const elapsed = Math.max(Date.now() - start.time, 1);
+      const width = surface.offsetWidth || window.innerWidth;
+      const threshold = Math.min(width * 0.24, 96);
+      const velocity = Math.abs(start.deltaX) / elapsed;
+      if (start.deltaX < -threshold || (velocity > 0.48 && start.deltaX < -30)) {
+        moveActiveTab(1);
+      } else if (start.deltaX > threshold || (velocity > 0.48 && start.deltaX > 30)) {
+        moveActiveTab(-1);
+      }
+    }
+
+    function touchCancel() {
+      swipeStartRef.current = null;
+    }
+
+    surface.addEventListener("touchstart", touchStart, { passive: true });
+    surface.addEventListener("touchmove", touchMove, { passive: false });
+    surface.addEventListener("touchend", touchEnd, { passive: true });
+    surface.addEventListener("touchcancel", touchCancel, { passive: true });
+    return () => {
+      surface.removeEventListener("touchstart", touchStart);
+      surface.removeEventListener("touchmove", touchMove);
+      surface.removeEventListener("touchend", touchEnd);
+      surface.removeEventListener("touchcancel", touchCancel);
+    };
+  }, [activeTab]);
+
+  return (
+    <main className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}>
       {error ? (
         <div className="notice" role="status">
           <WifiOff size={18} />
@@ -234,29 +260,31 @@ function App() {
         })}
       </nav>
 
-      {activeTab === "members" ? (
-        <MembersView
-          records={filteredRecords}
-          archivedMembers={state.archivedMembers || []}
-          memberPhotos={state.memberPhotos || {}}
-          memberReadings={state.memberReadings || {}}
-          onArchiveToggle={handleArchiveToggle}
-          onPhotoUpdate={handlePhotoUpdate}
-          onReadingUpdate={handleReadingUpdate}
-        />
-      ) : null}
-      {activeTab === "times" ? (
-        <TimesView
-          records={state.recentResults}
-          memberPhotos={state.memberPhotos || {}}
-          memberReadings={state.memberReadings || {}}
-          archivedMembers={state.archivedMembers || []}
-          onArchiveToggle={handleArchiveToggle}
-          onPhotoUpdate={handlePhotoUpdate}
-          onReadingUpdate={handleReadingUpdate}
-        />
-      ) : null}
-      {activeTab === "meets" ? <MeetsView records={filteredRecords} upcomingMeets={state.upcomingMeets || []} query={query} /> : null}
+      <div className="swipeSurface" ref={swipeSurfaceRef}>
+        {activeTab === "members" ? (
+          <MembersView
+            records={filteredRecords}
+            archivedMembers={state.archivedMembers || []}
+            memberPhotos={state.memberPhotos || {}}
+            memberReadings={state.memberReadings || {}}
+            onArchiveToggle={handleArchiveToggle}
+            onPhotoUpdate={handlePhotoUpdate}
+            onReadingUpdate={handleReadingUpdate}
+          />
+        ) : null}
+        {activeTab === "times" ? (
+          <TimesView
+            records={state.recentResults}
+            memberPhotos={state.memberPhotos || {}}
+            memberReadings={state.memberReadings || {}}
+            archivedMembers={state.archivedMembers || []}
+            onArchiveToggle={handleArchiveToggle}
+            onPhotoUpdate={handlePhotoUpdate}
+            onReadingUpdate={handleReadingUpdate}
+          />
+        ) : null}
+        {activeTab === "meets" ? <MeetsView records={filteredRecords} upcomingMeets={state.upcomingMeets || []} query={query} /> : null}
+      </div>
       {settingsOpen ? (
         <SettingsModal
           records={state.recentResults}
