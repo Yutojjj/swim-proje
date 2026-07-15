@@ -877,9 +877,12 @@ function PhotoUploadModal({ memberName, currentPhotoUrl = "", onSaved, onDelete,
   const cameraInputRef = useRef(null);
   const stageRef = useRef(null);
   const frameRef = useRef(null);
+  const activePointers = useRef(new Map());
+  const pinchStart = useRef(null);
   const [imageUrl, setImageUrl] = useState("");
   const [imageMeta, setImageMeta] = useState(null);
   const [crop, setCrop] = useState(() => initialCardCrop());
+  const [imageZoom, setImageZoom] = useState(1);
   const [dragging, setDragging] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -894,7 +897,21 @@ function PhotoUploadModal({ memberName, currentPhotoUrl = "", onSaved, onDelete,
     setImageUrl(nextUrl);
     setImageMeta(nextMeta);
     setCrop(initialCardCrop(nextMeta.width / nextMeta.height));
+    setImageZoom(1);
     setMessage("");
+  }
+
+  function handleStagePointerDown(event) {
+    if (!imageUrl) return;
+    activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (activePointers.current.size === 2) {
+      const [first, second] = Array.from(activePointers.current.values());
+      pinchStart.current = {
+        distance: getPointerDistance(first, second),
+        zoom: imageZoom
+      };
+      setDragging(null);
+    }
   }
 
   function handlePointerDown(event, mode = "move") {
@@ -911,6 +928,16 @@ function PhotoUploadModal({ memberName, currentPhotoUrl = "", onSaved, onDelete,
   }
 
   function handlePointerMove(event) {
+    if (activePointers.current.has(event.pointerId)) {
+      activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+    if (pinchStart.current && activePointers.current.size >= 2) {
+      const [first, second] = Array.from(activePointers.current.values());
+      const distance = getPointerDistance(first, second);
+      const nextZoom = clamp(pinchStart.current.zoom * (distance / pinchStart.current.distance), 1, 4);
+      setImageZoom(nextZoom);
+      return;
+    }
     if (!dragging) return;
     const dx = ((event.clientX - dragging.startX) / dragging.rect.width) * 100;
     const dy = ((event.clientY - dragging.startY) / dragging.rect.height) * 100;
@@ -937,6 +964,8 @@ function PhotoUploadModal({ memberName, currentPhotoUrl = "", onSaved, onDelete,
   }
 
   function handlePointerUp() {
+    activePointers.current.clear();
+    pinchStart.current = null;
     setDragging(null);
   }
 
@@ -945,7 +974,7 @@ function PhotoUploadModal({ memberName, currentPhotoUrl = "", onSaved, onDelete,
     setSaving(true);
     setMessage("");
     try {
-      const blob = await cropImageToCard(imageUrl, fittedCrop);
+      const blob = await cropImageToCard(imageUrl, fittedCrop, imageZoom);
       let photoUrl;
       try {
         photoUrl = await uploadMemberImage(blob, memberName);
@@ -990,12 +1019,13 @@ function PhotoUploadModal({ memberName, currentPhotoUrl = "", onSaved, onDelete,
         <div
           className="cropStage"
           ref={stageRef}
+          onPointerDown={handleStagePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
         >
           {imageUrl ? (
-            <div className="cropImageFrame" ref={frameRef} style={getImageFrameStyle(imageMeta)}>
+            <div className="cropImageFrame" ref={frameRef} style={getImageFrameStyle(imageMeta, imageZoom)}>
               <img src={imageUrl} alt="" />
               <div className="cropShade" />
               <div
@@ -1013,6 +1043,17 @@ function PhotoUploadModal({ memberName, currentPhotoUrl = "", onSaved, onDelete,
             <span>画像を選択してください</span>
           )}
         </div>
+        <label className="zoomControl">
+          <span>画像の拡大</span>
+          <input
+            type="range"
+            min="1"
+            max="4"
+            step="0.05"
+            value={imageZoom}
+            onChange={(event) => setImageZoom(Number(event.target.value))}
+          />
+        </label>
         <label className="zoomControl">
           <span>枠の大きさ</span>
           <input
@@ -1342,17 +1383,22 @@ function initialCardCrop(frameAspect = 1) {
   };
 }
 
-async function cropImageToCard(imageUrl, crop) {
+async function cropImageToCard(imageUrl, crop, imageZoom = 1) {
   const image = await loadImage(imageUrl);
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
   canvas.height = Math.round(canvas.width / CARD_CROP_ASPECT);
   const context = canvas.getContext("2d");
 
-  const sx = image.naturalWidth * (crop.x / 100);
-  const sy = image.naturalHeight * (crop.y / 100);
-  const sourceWidth = image.naturalWidth * (crop.width / 100);
-  const sourceHeight = image.naturalHeight * (crop.height / 100);
+  const zoom = Math.max(1, imageZoom || 1);
+  const sourceXPercent = clamp(50 + (crop.x - 50) / zoom, 0, 100);
+  const sourceYPercent = clamp(50 + (crop.y - 50) / zoom, 0, 100);
+  const sourceWidthPercent = Math.min(crop.width / zoom, 100 - sourceXPercent);
+  const sourceHeightPercent = Math.min(crop.height / zoom, 100 - sourceYPercent);
+  const sx = image.naturalWidth * (sourceXPercent / 100);
+  const sy = image.naturalHeight * (sourceYPercent / 100);
+  const sourceWidth = image.naturalWidth * (sourceWidthPercent / 100);
+  const sourceHeight = image.naturalHeight * (sourceHeightPercent / 100);
 
   context.drawImage(image, sx, sy, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
@@ -1378,8 +1424,13 @@ function fitCropToFrame(crop, frameAspect = 1) {
   };
 }
 
-function getImageFrameStyle(meta) {
+function getPointerDistance(first, second) {
+  return Math.hypot(first.x - second.x, first.y - second.y) || 1;
+}
+
+function getImageFrameStyle(meta, imageZoom = 1) {
   if (!meta?.width || !meta?.height) return {};
+  const zoom = Math.max(1, imageZoom || 1);
   const imageAspect = meta.width / meta.height;
   if (imageAspect >= 1) {
     const height = 100 / imageAspect;
@@ -1387,7 +1438,8 @@ function getImageFrameStyle(meta) {
       width: "100%",
       height: `${height}%`,
       left: "0%",
-      top: `${(100 - height) / 2}%`
+      top: `${(100 - height) / 2}%`,
+      "--image-zoom": zoom
     };
   }
   const width = imageAspect * 100;
@@ -1395,7 +1447,8 @@ function getImageFrameStyle(meta) {
     width: `${width}%`,
     height: "100%",
     left: `${(100 - width) / 2}%`,
-    top: "0%"
+    top: "0%",
+    "--image-zoom": zoom
   };
 }
 

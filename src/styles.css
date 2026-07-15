@@ -1478,6 +1478,9 @@ h1 {
 
 .cropImageFrame img {
   display: block;
+  transform: scale(var(--image-zoom, 1));
+  transform-origin: center;
+  touch-action: none;
 }
 
 .cropShade {
