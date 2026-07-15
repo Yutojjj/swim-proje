@@ -318,8 +318,13 @@ function MembersView({ records, archivedMembers, memberPhotos, memberReadings, o
       {uploadMember ? (
         <PhotoUploadModal
           memberName={uploadMember.name}
+          currentPhotoUrl={uploadMember.photoUrl}
           onSaved={(photoUrl) => {
             onPhotoUpdate(uploadMember.name, photoUrl);
+            setUploadMember(null);
+          }}
+          onDelete={() => {
+            onPhotoUpdate(uploadMember.name, "");
             setUploadMember(null);
           }}
           onClose={() => setUploadMember(null)}
@@ -545,8 +550,13 @@ function MemberModal({ member, isArchived = false, onArchiveToggle, onPhotoUpdat
       {uploadOpen ? (
         <PhotoUploadModal
           memberName={member.name}
+          currentPhotoUrl={member.photoUrl}
           onSaved={(photoUrl) => {
             onPhotoUpdate(member.name, photoUrl);
+            setUploadOpen(false);
+          }}
+          onDelete={() => {
+            onPhotoUpdate(member.name, "");
             setUploadOpen(false);
           }}
           onClose={() => setUploadOpen(false)}
@@ -862,32 +872,40 @@ function SettingsModal({ records, archivedMembers, memberPhotos, memberReadings,
   );
 }
 
-function PhotoUploadModal({ memberName, onSaved, onClose }) {
+function PhotoUploadModal({ memberName, currentPhotoUrl = "", onSaved, onDelete, onClose }) {
   const albumInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const stageRef = useRef(null);
+  const frameRef = useRef(null);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageMeta, setImageMeta] = useState(null);
   const [crop, setCrop] = useState(() => initialCardCrop());
   const [dragging, setDragging] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const frameAspect = imageMeta ? imageMeta.width / imageMeta.height : 1;
+  const fittedCrop = fitCropToFrame(crop, frameAspect);
 
-  function handleFile(file) {
+  async function handleFile(file) {
     if (!file) return;
-    setImageUrl(URL.createObjectURL(file));
-    setCrop(initialCardCrop());
+    const nextUrl = URL.createObjectURL(file);
+    const image = await loadImage(nextUrl);
+    const nextMeta = { width: image.naturalWidth, height: image.naturalHeight };
+    setImageUrl(nextUrl);
+    setImageMeta(nextMeta);
+    setCrop(initialCardCrop(nextMeta.width / nextMeta.height));
     setMessage("");
   }
 
   function handlePointerDown(event, mode = "move") {
     if (!imageUrl) return;
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    const rect = stageRef.current.getBoundingClientRect();
+    const rect = frameRef.current.getBoundingClientRect();
     setDragging({
       mode,
       startX: event.clientX,
       startY: event.clientY,
-      crop,
+      crop: fittedCrop,
       rect
     });
   }
@@ -898,8 +916,9 @@ function PhotoUploadModal({ memberName, onSaved, onClose }) {
     const dy = ((event.clientY - dragging.startY) / dragging.rect.height) * 100;
 
     if (dragging.mode === "resize") {
-      const nextWidth = clamp(dragging.crop.width + Math.max(dx, dy), 38, 94);
-      const nextHeight = nextWidth / CARD_CROP_ASPECT;
+      const maxWidth = getMaxCropWidth(frameAspect);
+      const nextWidth = clamp(dragging.crop.width + Math.max(dx, dy), 28, maxWidth);
+      const nextHeight = getCropHeight(nextWidth, frameAspect);
       setCrop({
         ...dragging.crop,
         width: nextWidth,
@@ -926,7 +945,7 @@ function PhotoUploadModal({ memberName, onSaved, onClose }) {
     setSaving(true);
     setMessage("");
     try {
-      const blob = await cropImageToCard(imageUrl, crop);
+      const blob = await cropImageToCard(imageUrl, fittedCrop);
       let photoUrl;
       try {
         photoUrl = await uploadMemberImage(blob, memberName);
@@ -960,6 +979,11 @@ function PhotoUploadModal({ memberName, onSaved, onClose }) {
             <ImagePlus size={18} />
             <span>アルバム</span>
           </button>
+          {currentPhotoUrl ? (
+            <button className="deletePhotoButton" onClick={onDelete}>
+              <span>削除</span>
+            </button>
+          ) : null}
           <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={(event) => handleFile(event.target.files?.[0])} />
           <input ref={albumInputRef} type="file" accept="image/*" onChange={(event) => handleFile(event.target.files?.[0])} />
         </div>
@@ -971,12 +995,12 @@ function PhotoUploadModal({ memberName, onSaved, onClose }) {
           onPointerCancel={handlePointerUp}
         >
           {imageUrl ? (
-            <>
+            <div className="cropImageFrame" ref={frameRef} style={getImageFrameStyle(imageMeta)}>
               <img src={imageUrl} alt="" />
               <div className="cropShade" />
               <div
                 className="cropBox"
-                style={{ left: `${crop.x}%`, top: `${crop.y}%`, width: `${crop.width}%`, height: `${crop.height}%` }}
+                style={{ left: `${fittedCrop.x}%`, top: `${fittedCrop.y}%`, width: `${fittedCrop.width}%`, height: `${fittedCrop.height}%` }}
                 onPointerDown={(event) => handlePointerDown(event, "move")}
               >
                 <span className="cropHandle" onPointerDown={(event) => {
@@ -984,7 +1008,7 @@ function PhotoUploadModal({ memberName, onSaved, onClose }) {
                   handlePointerDown(event, "resize");
                 }} />
               </div>
-            </>
+            </div>
           ) : (
             <span>画像を選択してください</span>
           )}
@@ -993,13 +1017,13 @@ function PhotoUploadModal({ memberName, onSaved, onClose }) {
           <span>枠の大きさ</span>
           <input
             type="range"
-            min="38"
-            max="94"
+            min="28"
+            max={getMaxCropWidth(frameAspect)}
             step="1"
-            value={crop.width}
+            value={fittedCrop.width}
             onChange={(event) => {
-              const width = Number(event.target.value);
-              const height = width / CARD_CROP_ASPECT;
+              const width = clamp(Number(event.target.value), 28, getMaxCropWidth(frameAspect));
+              const height = getCropHeight(width, frameAspect);
               setCrop((current) => ({
                 ...current,
                 width,
@@ -1307,9 +1331,9 @@ function formatRefreshInterval(minutes) {
   return `${minutes}分ごと`;
 }
 
-function initialCardCrop() {
-  const width = 78;
-  const height = width / CARD_CROP_ASPECT;
+function initialCardCrop(frameAspect = 1) {
+  const width = frameAspect >= CARD_CROP_ASPECT ? 78 / frameAspect : 78;
+  const height = getCropHeight(width, frameAspect);
   return {
     x: (100 - width) / 2,
     y: (100 - height) / 2,
@@ -1325,25 +1349,54 @@ async function cropImageToCard(imageUrl, crop) {
   canvas.height = Math.round(canvas.width / CARD_CROP_ASPECT);
   const context = canvas.getContext("2d");
 
-  const stageWidth = CARD_CROP_ASPECT;
-  const stageHeight = 1;
-  const scale = Math.max(stageWidth / image.naturalWidth, stageHeight / image.naturalHeight);
-  const displayedWidth = image.naturalWidth * scale;
-  const displayedHeight = image.naturalHeight * scale;
-  const offsetX = (stageWidth - displayedWidth) / 2;
-  const offsetY = (stageHeight - displayedHeight) / 2;
-
-  const cropX = stageWidth * (crop.x / 100);
-  const cropY = stageHeight * (crop.y / 100);
-  const cropWidth = stageWidth * (crop.width / 100);
-  const cropHeight = stageHeight * (crop.height / 100);
-  const sx = (cropX - offsetX) / scale;
-  const sy = (cropY - offsetY) / scale;
-  const sourceWidth = cropWidth / scale;
-  const sourceHeight = cropHeight / scale;
+  const sx = image.naturalWidth * (crop.x / 100);
+  const sy = image.naturalHeight * (crop.y / 100);
+  const sourceWidth = image.naturalWidth * (crop.width / 100);
+  const sourceHeight = image.naturalHeight * (crop.height / 100);
 
   context.drawImage(image, sx, sy, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
+}
+
+function getCropHeight(width, frameAspect = 1) {
+  return width * frameAspect / CARD_CROP_ASPECT;
+}
+
+function getMaxCropWidth(frameAspect = 1) {
+  return Math.min(94, 94 / frameAspect);
+}
+
+function fitCropToFrame(crop, frameAspect = 1) {
+  const width = clamp(crop.width, 28, getMaxCropWidth(frameAspect));
+  const height = getCropHeight(width, frameAspect);
+  return {
+    ...crop,
+    width,
+    height,
+    x: clamp(crop.x, 0, 100 - width),
+    y: clamp(crop.y, 0, 100 - height)
+  };
+}
+
+function getImageFrameStyle(meta) {
+  if (!meta?.width || !meta?.height) return {};
+  const imageAspect = meta.width / meta.height;
+  if (imageAspect >= 1) {
+    const height = 100 / imageAspect;
+    return {
+      width: "100%",
+      height: `${height}%`,
+      left: "0%",
+      top: `${(100 - height) / 2}%`
+    };
+  }
+  const width = imageAspect * 100;
+  return {
+    width: `${width}%`,
+    height: "100%",
+    left: `${(100 - width) / 2}%`,
+    top: "0%"
+  };
 }
 
 function clamp(value, min, max) {
