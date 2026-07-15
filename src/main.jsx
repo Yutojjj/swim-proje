@@ -35,7 +35,7 @@ function App() {
   const swipeSurfaceRef = useRef(null);
   const swipeStartRef = useRef(null);
   const swipeFrameRef = useRef(0);
-  const activeTabIndex = tabs.findIndex((tab) => tab.id === activeTab);
+  const activeTabIndex = Math.max(0, tabs.findIndex((tab) => tab.id === activeTab));
 
   const filteredRecords = useMemo(() => {
     const needle = normalizeSearchText(query);
@@ -98,9 +98,17 @@ function App() {
   }
 
   function moveActiveTab(direction) {
-    const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
+    const currentIndex = activeTabIndex;
     const nextIndex = clamp(currentIndex + direction, 0, tabs.length - 1);
     if (nextIndex !== currentIndex) setActiveTab(tabs[nextIndex].id);
+  }
+
+  function selectTab(tabId) {
+    const nextIndex = tabs.findIndex((tab) => tab.id === tabId);
+    if (nextIndex < 0 || tabId === activeTab) return;
+    setSwipeVisual({ offset: 0, animating: true });
+    setActiveTab(tabId);
+    window.setTimeout(() => setSwipeVisual({ offset: 0, animating: false }), 240);
   }
 
   function setSwipeOffset(offset, animating = false) {
@@ -116,26 +124,16 @@ function App() {
     window.setTimeout(() => setSwipeVisual({ offset: 0, animating: false }), 220);
   }
 
-  function animateTabSwipe(direction, width) {
-    const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
+  function animateTabSwipe(direction) {
+    const currentIndex = activeTabIndex;
     const nextIndex = clamp(currentIndex + direction, 0, tabs.length - 1);
     if (nextIndex === currentIndex) {
       snapSwipeBack();
       return;
     }
-    const exitOffset = direction > 0 ? -width : width;
-    const enterOffset = direction > 0 ? width : -width;
-    setSwipeVisual({ offset: exitOffset, animating: true });
-    window.setTimeout(() => {
-      setActiveTab(tabs[nextIndex].id);
-      setSwipeVisual({ offset: enterOffset, animating: false });
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          setSwipeVisual({ offset: 0, animating: true });
-          window.setTimeout(() => setSwipeVisual({ offset: 0, animating: false }), 220);
-        });
-      });
-    }, 150);
+    setSwipeVisual({ offset: 0, animating: true });
+    setActiveTab(tabs[nextIndex].id);
+    window.setTimeout(() => setSwipeVisual({ offset: 0, animating: false }), 240);
   }
 
   function shouldIgnoreSwipe(target) {
@@ -228,7 +226,7 @@ function App() {
       }
       if (start.locked !== "h") return;
       event.preventDefault();
-      const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
+      const currentIndex = activeTabIndex;
       const atFirst = currentIndex <= 0 && dx > 0;
       const atLast = currentIndex >= tabs.length - 1 && dx < 0;
       const visualOffset = atFirst || atLast ? dx * 0.22 : dx;
@@ -249,9 +247,9 @@ function App() {
       const threshold = Math.min(width * 0.24, 96);
       const velocity = Math.abs(start.deltaX) / elapsed;
       if (start.deltaX < -threshold || (velocity > 0.48 && start.deltaX < -30)) {
-        animateTabSwipe(1, width);
+        animateTabSwipe(1);
       } else if (start.deltaX > threshold || (velocity > 0.48 && start.deltaX > 30)) {
-        animateTabSwipe(-1, width);
+        animateTabSwipe(-1);
       } else {
         snapSwipeBack();
       }
@@ -302,43 +300,47 @@ function App() {
       <nav className="tabs" aria-label="画面切り替え">
         {tabs.map((tab) => {
           return (
-            <button key={tab.id} className={activeTab === tab.id ? "active" : ""} onClick={() => setActiveTab(tab.id)}>
+            <button key={tab.id} className={activeTab === tab.id ? "active" : ""} onClick={() => selectTab(tab.id)}>
               <span>{tab.label}</span>
             </button>
           );
         })}
       </nav>
 
-      <div
-        className={`swipeSurface ${swipeVisual.animating ? "swipeAnimating" : ""} ${swipeVisual.offset ? "swipeDragging" : ""}`}
-        ref={swipeSurfaceRef}
-        style={{ "--swipe-offset": `${swipeVisual.offset}px` }}
-      >
-        <span className="swipeEdgeHint swipeEdgeHintPrev">{tabs[activeTabIndex - 1]?.label || ""}</span>
-        <span className="swipeEdgeHint swipeEdgeHintNext">{tabs[activeTabIndex + 1]?.label || ""}</span>
-        {activeTab === "members" ? (
-          <MembersView
-            records={filteredRecords}
-            archivedMembers={state.archivedMembers || []}
-            memberPhotos={state.memberPhotos || {}}
-            memberReadings={state.memberReadings || {}}
-            onArchiveToggle={handleArchiveToggle}
-            onPhotoUpdate={handlePhotoUpdate}
-            onReadingUpdate={handleReadingUpdate}
-          />
-        ) : null}
-        {activeTab === "times" ? (
-          <TimesView
-            records={state.recentResults}
-            memberPhotos={state.memberPhotos || {}}
-            memberReadings={state.memberReadings || {}}
-            archivedMembers={state.archivedMembers || []}
-            onArchiveToggle={handleArchiveToggle}
-            onPhotoUpdate={handlePhotoUpdate}
-            onReadingUpdate={handleReadingUpdate}
-          />
-        ) : null}
-        {activeTab === "meets" ? <MeetsView records={filteredRecords} upcomingMeets={state.upcomingMeets || []} query={query} /> : null}
+      <div className={`swipeSurface ${swipeVisual.offset ? "swipeDragging" : ""}`} ref={swipeSurfaceRef}>
+        <div
+          className={`swipeTrack ${swipeVisual.animating ? "swipeAnimating" : ""}`}
+          style={{
+            "--track-index-offset": `${activeTabIndex * -100}%`,
+            "--swipe-offset": `${swipeVisual.offset}px`
+          }}
+        >
+          <section className={`swipePane ${activeTab === "members" ? "activePane" : ""}`} aria-hidden={activeTab !== "members"}>
+            <MembersView
+              records={filteredRecords}
+              archivedMembers={state.archivedMembers || []}
+              memberPhotos={state.memberPhotos || {}}
+              memberReadings={state.memberReadings || {}}
+              onArchiveToggle={handleArchiveToggle}
+              onPhotoUpdate={handlePhotoUpdate}
+              onReadingUpdate={handleReadingUpdate}
+            />
+          </section>
+          <section className={`swipePane ${activeTab === "times" ? "activePane" : ""}`} aria-hidden={activeTab !== "times"}>
+            <TimesView
+              records={state.recentResults}
+              memberPhotos={state.memberPhotos || {}}
+              memberReadings={state.memberReadings || {}}
+              archivedMembers={state.archivedMembers || []}
+              onArchiveToggle={handleArchiveToggle}
+              onPhotoUpdate={handlePhotoUpdate}
+              onReadingUpdate={handleReadingUpdate}
+            />
+          </section>
+          <section className={`swipePane ${activeTab === "meets" ? "activePane" : ""}`} aria-hidden={activeTab !== "meets"}>
+            <MeetsView records={filteredRecords} upcomingMeets={state.upcomingMeets || []} query={query} />
+          </section>
+        </div>
       </div>
       {settingsOpen ? (
         <SettingsModal
