@@ -1742,17 +1742,17 @@ h1 {
   }
 
   .genderToggle button {
-    min-height: 34px;
+    min-height: 40px;
     font-size: 11px;
   }
 
   .memberFilterBar select {
-    min-height: 34px;
+    min-height: 40px;
     font-size: 11px;
   }
 
   .sortInlineButton {
-    min-height: 34px;
+    min-height: 40px;
     font-size: 11px;
     min-width: 58px;
     padding: 0 7px;
@@ -1821,7 +1821,7 @@ h1 {
   }
 
   .eventCompactFilters select {
-    min-height: 34px;
+    min-height: 40px;
     padding: 0 5px;
     font-size: 11px;
   }
