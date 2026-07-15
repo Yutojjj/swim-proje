@@ -31,8 +31,11 @@ button {
 
 .app {
   width: min(1120px, calc(100% - 24px));
+  --dock-width: min(1120px, calc(100% - 16px));
+  --tab-height: 66px;
+  --control-dock-height: 54px;
   margin: 0 auto;
-  padding: 8px 0 86px;
+  padding: 8px 0 240px;
 }
 
 .eyebrow {
@@ -117,11 +120,24 @@ h1 {
 }
 
 .controls {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 8px);
+  z-index: 17;
+  width: var(--dock-width);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin: 0 0 10px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid rgba(207, 226, 223, 0.92);
+  border-radius: 10px;
+  background: rgba(247, 251, 251, 0.94);
+  box-shadow: 0 -10px 28px rgba(16, 35, 34, 0.12);
+  transform: translateX(-50%);
+  transition: transform 180ms ease, opacity 180ms ease;
+  backdrop-filter: blur(10px);
 }
 
 .searchBox {
@@ -196,6 +212,15 @@ h1 {
   background: #0f766e;
 }
 
+.app.dockHidden .controls,
+.app.dockHidden .memberFilterBar,
+.app.dockHidden .eventFilterBar,
+.app.dockHidden .meetModeTabs {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(100% + 90px));
+}
+
 .memberGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -203,10 +228,23 @@ h1 {
 }
 
 .memberFilterBar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tab-height) + var(--control-dock-height) + env(safe-area-inset-bottom) + 16px);
+  z-index: 16;
+  width: var(--dock-width);
   display: grid;
   grid-template-columns: 0.9fr 0.72fr 0.72fr auto;
   gap: 5px;
-  margin: 0 0 8px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid rgba(207, 226, 223, 0.92);
+  border-radius: 10px;
+  background: rgba(247, 251, 251, 0.94);
+  box-shadow: 0 -8px 22px rgba(16, 35, 34, 0.1);
+  transform: translateX(-50%);
+  transition: transform 180ms ease, opacity 180ms ease;
+  backdrop-filter: blur(10px);
 }
 
 .memberFilterBar label,
@@ -507,6 +545,25 @@ h1 {
   margin-bottom: 12px;
 }
 
+.eventFilterBar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 8px);
+  z-index: 16;
+  width: var(--dock-width);
+  max-height: min(42dvh, 260px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid rgba(207, 226, 223, 0.92);
+  border-radius: 10px;
+  background: rgba(247, 251, 251, 0.94);
+  box-shadow: 0 -8px 22px rgba(16, 35, 34, 0.1);
+  transform: translateX(-50%);
+  transition: transform 180ms ease, opacity 180ms ease;
+  backdrop-filter: blur(10px);
+}
+
 .filterRow {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -800,14 +857,23 @@ h1 {
 }
 
 .meetModeTabs {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tab-height) + var(--control-dock-height) + env(safe-area-inset-bottom) + 16px);
+  z-index: 16;
+  width: var(--dock-width);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
-  margin: 0 0 8px;
+  margin: 0;
   padding: 4px;
   border: 1px solid #cfe2df;
   border-radius: 10px;
-  background: #eef7f5;
+  background: rgba(238, 247, 245, 0.94);
+  box-shadow: 0 -8px 22px rgba(16, 35, 34, 0.1);
+  transform: translateX(-50%);
+  transition: transform 180ms ease, opacity 180ms ease;
+  backdrop-filter: blur(10px);
 }
 
 .meetModeTabs button {
@@ -1547,7 +1613,7 @@ h1 {
   .app {
     width: min(100% - 16px, 1120px);
     padding-top: 8px;
-    padding-bottom: 84px;
+    padding-bottom: 270px;
   }
 
   .controls {
@@ -1629,6 +1695,10 @@ h1 {
 
   .filterBar {
     gap: 7px;
+  }
+
+  .eventFilterBar {
+    max-height: min(48dvh, 300px);
   }
 
   .timeGrid {

@@ -33,6 +33,7 @@ function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isDockHidden, setIsDockHidden] = useState(false);
 
   const filteredRecords = useMemo(() => {
     const needle = normalizeSearchText(query);
@@ -130,9 +131,22 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    let showTimer = 0;
+    function handleScroll() {
+      setIsDockHidden(true);
+      window.clearTimeout(showTimer);
+      showTimer = window.setTimeout(() => setIsDockHidden(false), 260);
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.clearTimeout(showTimer);
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
-    <main className="app">
+    <main className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}>
       {error ? (
         <div className="notice" role="status">
           <WifiOff size={18} />
