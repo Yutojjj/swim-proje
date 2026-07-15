@@ -45,7 +45,7 @@ button {
 
 .swipeSurface {
   position: relative;
-  min-height: calc(100dvh - var(--tab-height) - 20px);
+  min-height: 0;
   overflow-x: clip;
   overflow-y: visible;
   touch-action: pan-y;
@@ -55,8 +55,8 @@ button {
   position: relative;
   display: flex;
   width: 100%;
-  min-height: calc(100dvh - var(--tab-height) - 20px);
-  height: calc(100dvh - var(--tab-height) - 20px);
+  min-height: 0;
+  height: auto;
   align-items: flex-start;
   left: calc(var(--track-index-offset, 0%) + var(--swipe-offset, 0px));
   will-change: left;
@@ -72,6 +72,8 @@ button {
 }
 
 .swipePane:not(.activePane) {
+  height: 0;
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -625,6 +627,7 @@ h1 {
 }
 
 .filterBar label {
+  position: relative;
   display: grid;
   gap: 5px;
   color: #5c6f6d;
@@ -638,6 +641,28 @@ h1 {
   border-radius: 8px;
   color: #102322;
   background: #fff;
+}
+
+.filterBar .inlineFilterLabel {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  color: #047857;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.filterBar label:has(.inlineFilterLabel) select {
+  padding-left: 42px;
+  font-weight: 800;
+}
+
+.filterBar .eventSelect:has(.inlineFilterLabel) select {
+  padding-left: 48px;
 }
 
 .filterBar input {
@@ -1777,6 +1802,19 @@ h1 {
     font-size: 10px;
   }
 
+  .filterBar .inlineFilterLabel {
+    left: 7px;
+    font-size: 11px;
+  }
+
+  .filterBar label:has(.inlineFilterLabel) select {
+    padding-left: 36px;
+  }
+
+  .filterBar .eventSelect:has(.inlineFilterLabel) select {
+    padding-left: 42px;
+  }
+
   .eventCompactFilters select {
     min-height: 34px;
     padding: 0 5px;
@@ -1866,6 +1904,22 @@ h1 {
   .meetCard {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .meetCard {
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .meetCard h2 {
+    margin: 2px 0;
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  .meetCard > span {
+    padding: 5px 8px;
   }
 
   .meetRecordRow {

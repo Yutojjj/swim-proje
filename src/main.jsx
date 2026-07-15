@@ -792,7 +792,7 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
       <section className="filterBar eventFilterBar" aria-label="種目絞り込み">
         <div className="filterRow eventCompactFilters">
           <label>
-            <span>性別</span>
+            <span className="inlineFilterLabel">性別</span>
             <select value={genderFilter} onChange={(event) => setGenderFilter(event.target.value)}>
               <option value="all">すべて</option>
               <option value="男子">男子</option>
@@ -801,21 +801,21 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
             </select>
           </label>
           <label>
-            <span>学年</span>
+            <span className="inlineFilterLabel">学年</span>
             <select value={gradeFilter} onChange={(event) => setGradeFilter(event.target.value)}>
               <option value="all">すべて</option>
               {options.grades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
             </select>
           </label>
           <label>
-            <span>級</span>
+            <span className="inlineFilterLabel">級</span>
             <select value={classFilter} onChange={(event) => setClassFilter(event.target.value)}>
               <option value="all">すべて</option>
               {options.classes.map((swimClass) => <option key={swimClass} value={swimClass}>{swimClass}</option>)}
             </select>
           </label>
           <label className="eventSelect">
-            <span>種目</span>
+            <span className="inlineFilterLabel">種目</span>
             <select value={eventFilter} onChange={(event) => setEventFilter(event.target.value)}>
               <option value="all">すべて</option>
               {eventOptions.map((eventName) => <option key={eventName} value={eventName}>{eventName}</option>)}
