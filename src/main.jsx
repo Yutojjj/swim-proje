@@ -3,12 +3,9 @@ import { createRoot } from "react-dom/client";
 import {
   Camera,
   ImagePlus,
-  ListChecks,
   RefreshCcw,
   Search,
   Settings,
-  Timer,
-  Users,
   WifiOff
 } from "lucide-react";
 import "./styles.css";
@@ -16,9 +13,9 @@ import { loadBoardState, saveBoardState, uploadMemberImage } from "./firebaseSto
 import { getStoredState, saveStoredState, syncRecords } from "./recordSync";
 
 const tabs = [
-  { id: "members", label: "メンバー", icon: Users },
-  { id: "times", label: "種目", icon: Timer },
-  { id: "meets", label: "大会一覧", icon: ListChecks }
+  { id: "members", label: "メンバー" },
+  { id: "times", label: "種目" },
+  { id: "meets", label: "大会一覧" }
 ];
 const CARD_CROP_ASPECT = 1;
 const NAME_READING_PARTS = [
@@ -34,6 +31,7 @@ function App() {
   const [error, setError] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isDockHidden, setIsDockHidden] = useState(false);
+  const swipeStartRef = useRef(null);
 
   const filteredRecords = useMemo(() => {
     const needle = normalizeSearchText(query);
@@ -95,6 +93,33 @@ function App() {
     });
   }
 
+  function moveActiveTab(direction) {
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
+    const nextIndex = clamp(currentIndex + direction, 0, tabs.length - 1);
+    if (nextIndex !== currentIndex) setActiveTab(tabs[nextIndex].id);
+  }
+
+  function handleSwipeStart(event) {
+    if (event.pointerType === "mouse" || event.target.closest("button,input,select,textarea,a,.tabs,.controls,.memberFilterBar,.eventFilterBar,.meetModeTabs,.modalBackdrop")) {
+      swipeStartRef.current = null;
+      return;
+    }
+    swipeStartRef.current = {
+      x: event.clientX,
+      y: event.clientY
+    };
+  }
+
+  function handleSwipeEnd(event) {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    moveActiveTab(dx < 0 ? 1 : -1);
+  }
+
   useEffect(() => {
     let cancelled = false;
     loadBoardState()
@@ -146,7 +171,14 @@ function App() {
   }, []);
 
   return (
-    <main className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}>
+    <main
+      className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}
+      onPointerDown={handleSwipeStart}
+      onPointerUp={handleSwipeEnd}
+      onPointerCancel={() => {
+        swipeStartRef.current = null;
+      }}
+    >
       {error ? (
         <div className="notice" role="status">
           <WifiOff size={18} />
@@ -172,10 +204,8 @@ function App() {
 
       <nav className="tabs" aria-label="画面切り替え">
         {tabs.map((tab) => {
-          const Icon = tab.icon;
           return (
             <button key={tab.id} className={activeTab === tab.id ? "active" : ""} onClick={() => setActiveTab(tab.id)}>
-              <Icon size={18} />
               <span>{tab.label}</span>
             </button>
           );

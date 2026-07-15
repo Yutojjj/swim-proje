@@ -32,10 +32,11 @@ button {
 .app {
   width: min(1120px, calc(100% - 24px));
   --dock-width: min(1120px, calc(100% - 16px));
-  --tab-height: 66px;
+  --tab-height: 42px;
   --control-dock-height: 54px;
   margin: 0 auto;
-  padding: 8px 0 240px;
+  padding: 8px 0 214px;
+  touch-action: pan-y;
 }
 
 .eyebrow {
@@ -194,17 +195,19 @@ h1 {
   padding: 2px;
   border: 1px solid #d6e8e6;
   border-bottom: 0;
-  border-radius: 10px 10px 0 0;
+  border-radius: 8px 8px 0 0;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 -8px 24px rgba(16, 35, 34, 0.12);
+  box-shadow: 0 -5px 16px rgba(16, 35, 34, 0.1);
 }
 
 .tabs button {
-  min-height: 58px;
-  padding: 0 8px;
-  border-radius: 8px;
+  min-height: 36px;
+  padding: 0 6px;
+  border-radius: 6px;
   color: #37514f;
   background: #edf5f4;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .tabs button.active {
@@ -234,7 +237,7 @@ h1 {
   z-index: 16;
   width: var(--dock-width);
   display: grid;
-  grid-template-columns: 0.9fr 0.72fr 0.72fr auto;
+  grid-template-columns: 0.78fr 0.78fr 0.78fr auto;
   gap: 5px;
   margin: 0;
   padding: 6px;
@@ -1613,7 +1616,7 @@ h1 {
   .app {
     width: min(100% - 16px, 1120px);
     padding-top: 8px;
-    padding-bottom: 270px;
+    padding-bottom: 244px;
   }
 
   .controls {
@@ -1633,8 +1636,8 @@ h1 {
   }
 
   .tabs button {
-    min-height: 64px;
-    flex-direction: column;
+    min-height: 36px;
+    flex-direction: row;
     font-size: 12px;
   }
 
@@ -1645,7 +1648,7 @@ h1 {
 
   .memberFilterBar {
     gap: 4px;
-    grid-template-columns: 0.9fr 0.72fr 0.72fr auto;
+    grid-template-columns: 0.76fr 0.78fr 0.78fr auto;
   }
 
   .genderToggle button {
