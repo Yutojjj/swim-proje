@@ -652,12 +652,16 @@ h1 {
 }
 
 .eventCompactFilters {
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.eventSearch input {
-  border-color: #b9d8d3;
-  background: #f8fffd;
+.eventSelect {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.eventSelect select {
+  min-width: 0;
 }
 
 .timeMeetSections {
@@ -1758,6 +1762,25 @@ h1 {
 
   .eventFilterBar {
     max-height: min(48dvh, 300px);
+  }
+
+  .eventCompactFilters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .eventCompactFilters label {
+    min-width: 0;
+  }
+
+  .eventCompactFilters span {
+    font-size: 10px;
+  }
+
+  .eventCompactFilters select {
+    min-height: 34px;
+    padding: 0 5px;
+    font-size: 11px;
   }
 
   .timeGrid {

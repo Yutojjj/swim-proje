@@ -765,7 +765,6 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
   const [gradeFilter, setGradeFilter] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
-  const [eventQuery, setEventQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const options = useMemo(() => buildFilterOptions(records), [records]);
   const memberCards = useMemo(() => buildMemberCards(records, memberPhotos, memberReadings), [records, memberPhotos, memberReadings]);
@@ -774,12 +773,10 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
     [options.events, genderFilter]
   );
   const filtered = records.filter((record) => {
-    const needle = normalizeSearchText(eventQuery);
     if (eventFilter !== "all" && record.event !== eventFilter) return false;
     if (gradeFilter !== "all" && record.grade !== gradeFilter) return false;
     if (classFilter !== "all" && getSwimClass(record) !== classFilter) return false;
     if (genderFilter !== "all" && getGender(record.event) !== genderFilter) return false;
-    if (needle && !buildRecordSearchText(record, memberReadings).includes(needle)) return false;
     return true;
   });
   const groupedRecords = useMemo(() => groupRecordsByMeet(filtered), [filtered]);
@@ -817,22 +814,14 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
               {options.classes.map((swimClass) => <option key={swimClass} value={swimClass}>{swimClass}</option>)}
             </select>
           </label>
+          <label className="eventSelect">
+            <span>種目</span>
+            <select value={eventFilter} onChange={(event) => setEventFilter(event.target.value)}>
+              <option value="all">すべて</option>
+              {eventOptions.map((eventName) => <option key={eventName} value={eventName}>{eventName}</option>)}
+            </select>
+          </label>
         </div>
-        <label className="eventSelect">
-          <span>種目</span>
-          <select value={eventFilter} onChange={(event) => setEventFilter(event.target.value)}>
-            <option value="all">すべて</option>
-            {eventOptions.map((eventName) => <option key={eventName} value={eventName}>{eventName}</option>)}
-          </select>
-        </label>
-        <label className="eventSearch">
-          <span>検索</span>
-          <input
-            value={eventQuery}
-            onChange={(event) => setEventQuery(event.target.value)}
-            placeholder="名前・種目・大会名"
-          />
-        </label>
       </section>
 
       <section className="timeMeetSections" aria-label="種目一覧">
