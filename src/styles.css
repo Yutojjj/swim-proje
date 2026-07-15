@@ -363,41 +363,48 @@ h1 {
 }
 
 .memberCard h2 {
-  margin: auto 0 4px;
-  font-size: 13px;
+  margin: 0 0 5px;
+  color: #071817;
+  font-size: 15px;
+  font-weight: 950;
   line-height: 1.15;
   letter-spacing: 0;
 }
 
 .memberReading {
   overflow: hidden;
-  margin: -1px 0 5px;
-  color: #5c6f6d;
-  font-size: 9px;
-  font-weight: 800;
+  margin: auto 0 2px;
+  color: #405c59;
+  font-size: 10px;
+  font-weight: 900;
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.memberCard.hasPhoto h2 {
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.58);
+}
+
 .memberCard.hasPhoto .memberReading {
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.38);
 }
 
 .memberFacts {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
-  font-size: 9px;
+  gap: 4px;
+  font-size: 10px;
 }
 
 .memberFacts span {
-  padding: 2px 4px;
-  border-radius: 5px;
+  padding: 3px 5px;
+  border-radius: 6px;
   color: #37514f;
   background: rgba(237, 247, 245, 0.9);
-  font-weight: 700;
+  font-weight: 900;
 }
 
 .memberCard.hasPhoto .memberFacts span {
@@ -599,28 +606,6 @@ h1 {
   width: 100%;
   touch-action: manipulation;
   user-select: none;
-}
-
-.memberPhotoQuickButton {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  z-index: 8;
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #cfe2df;
-  border-radius: 999px;
-  color: #0f766e;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 5px 12px rgba(16, 35, 34, 0.12);
-  cursor: pointer;
-}
-
-.memberPhotoQuickButton:active {
-  transform: translateY(1px);
 }
 
 .timeCard.eventFree {
@@ -1597,21 +1582,21 @@ h1 {
   }
 
   .memberCard h2 {
-    font-size: 11px;
+    font-size: 13px;
   }
 
   .memberReading {
-    font-size: 8px;
-    margin-bottom: 4px;
+    font-size: 9px;
+    margin-bottom: 2px;
   }
 
   .memberFacts {
-    gap: 2px;
-    font-size: 8px;
+    gap: 3px;
+    font-size: 9px;
   }
 
   .memberFacts span {
-    padding: 2px 3px;
+    padding: 2px 4px;
   }
 
   .bestUpdateBadge {

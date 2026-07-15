@@ -390,8 +390,8 @@ function MemberCard({ member, onClick, onArchive, onPhotoRequest, onReadingReque
         <div className="memberOverlay">
           {member.hasUpdate ? <span className="updateDot" aria-label="更新あり" /> : null}
           {member.hasBestUpdate ? <span className="bestUpdateBadge">ベスト更新</span> : null}
-          <h2>{member.name}</h2>
           {member.reading ? <p className="memberReading">{member.reading}</p> : null}
+          <h2>{member.name}</h2>
           <div className="memberFacts">
             <span className={`factChip ${genderClassName(member.gender)}`}>{member.gender || "性別未取得"}</span>
             <span className="factChip gradeChip">{member.grade || "学年未取得"}</span>
@@ -399,22 +399,6 @@ function MemberCard({ member, onClick, onArchive, onPhotoRequest, onReadingReque
           </div>
         </div>
       </button>
-      {!member.photoUrl ? (
-        <button
-          className="memberPhotoQuickButton"
-          type="button"
-          aria-label={`${member.name}の画像を追加`}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            clearLongPress();
-            onPhotoRequest();
-          }}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <ImagePlus size={15} />
-        </button>
-      ) : null}
       {menuOpen ? (
         <div className="memberLongPressMenu" role="menu">
           <button
