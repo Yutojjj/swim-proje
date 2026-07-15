@@ -517,6 +517,26 @@ h1 {
   background: #fff;
 }
 
+.filterBar input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #cfe2df;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #102322;
+  background: #fff;
+  font: inherit;
+}
+
+.eventCompactFilters {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.eventSearch input {
+  border-color: #b9d8d3;
+  background: #f8fffd;
+}
+
 .timeMeetSections {
   display: grid;
   gap: 12px;
@@ -743,7 +763,23 @@ h1 {
   white-space: nowrap;
 }
 
-.timeCardNameLine span {
+.timeCardNameBlock {
+  min-width: 0;
+}
+
+.timeCardReading {
+  display: block;
+  margin-bottom: 2px;
+  overflow: hidden;
+  color: #607a77;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeCardNameLine > span {
   flex: 0 0 auto;
   padding: 2px 4px;
   border-radius: 999px;

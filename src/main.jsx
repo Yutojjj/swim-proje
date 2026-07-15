@@ -610,6 +610,8 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
   const [eventFilter, setEventFilter] = useState("all");
   const [gradeFilter, setGradeFilter] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
+  const [classFilter, setClassFilter] = useState("all");
+  const [eventQuery, setEventQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const options = useMemo(() => buildFilterOptions(records), [records]);
   const memberCards = useMemo(() => buildMemberCards(records, memberPhotos, memberReadings), [records, memberPhotos, memberReadings]);
@@ -618,9 +620,12 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
     [options.events, genderFilter]
   );
   const filtered = records.filter((record) => {
+    const needle = normalizeSearchText(eventQuery);
     if (eventFilter !== "all" && record.event !== eventFilter) return false;
     if (gradeFilter !== "all" && record.grade !== gradeFilter) return false;
+    if (classFilter !== "all" && getSwimClass(record) !== classFilter) return false;
     if (genderFilter !== "all" && getGender(record.event) !== genderFilter) return false;
+    if (needle && !buildRecordSearchText(record, memberReadings).includes(needle)) return false;
     return true;
   });
   const groupedRecords = useMemo(() => groupRecordsByMeet(filtered), [filtered]);
@@ -634,7 +639,7 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
   return (
     <>
       <section className="filterBar eventFilterBar" aria-label="種目絞り込み">
-        <div className="filterRow">
+        <div className="filterRow eventCompactFilters">
           <label>
             <span>性別</span>
             <select value={genderFilter} onChange={(event) => setGenderFilter(event.target.value)}>
@@ -651,6 +656,13 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
               {options.grades.map((grade) => <option key={grade} value={grade}>{grade}</option>)}
             </select>
           </label>
+          <label>
+            <span>級</span>
+            <select value={classFilter} onChange={(event) => setClassFilter(event.target.value)}>
+              <option value="all">すべて</option>
+              {options.classes.map((swimClass) => <option key={swimClass} value={swimClass}>{swimClass}</option>)}
+            </select>
+          </label>
         </div>
         <label className="eventSelect">
           <span>種目</span>
@@ -658,6 +670,14 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
             <option value="all">すべて</option>
             {eventOptions.map((eventName) => <option key={eventName} value={eventName}>{eventName}</option>)}
           </select>
+        </label>
+        <label className="eventSearch">
+          <span>検索</span>
+          <input
+            value={eventQuery}
+            onChange={(event) => setEventQuery(event.target.value)}
+            placeholder="名前・種目・大会名"
+          />
         </label>
       </section>
 
@@ -673,7 +693,12 @@ function TimesView({ records, memberPhotos, memberReadings, archivedMembers, onA
                 <button className={`timeCard ${eventColorClassName(record.event)}`} key={record.id} onClick={() => setSelectedMember(memberCards.find((member) => member.name === record.swimmer) || null)}>
                   <p>{record.event}</p>
                   <div className="timeCardNameLine">
-                    <h2>{record.swimmer}</h2>
+                    <div className="timeCardNameBlock">
+                      {getDisplayReading(record.swimmer, memberReadings[record.swimmer]) ? (
+                        <span className="timeCardReading">{getDisplayReading(record.swimmer, memberReadings[record.swimmer])}</span>
+                      ) : null}
+                      <h2>{record.swimmer}</h2>
+                    </div>
                     <span>{record.grade || "-"}</span>
                   </div>
                   <strong>{formatTime(record.time)}</strong>
@@ -1084,7 +1109,8 @@ function buildMemberEventSummaries(records) {
 function buildFilterOptions(records) {
   return {
     events: Array.from(new Set(records.map((record) => record.event).filter(Boolean))).sort(),
-    grades: Array.from(new Set(records.map((record) => record.grade).filter(Boolean))).sort(compareGrade)
+    grades: Array.from(new Set(records.map((record) => record.grade).filter(Boolean))).sort(compareGrade),
+    classes: Array.from(new Set(records.map(getSwimClass).filter(Boolean))).sort(compareSwimClass)
   };
 }
 
