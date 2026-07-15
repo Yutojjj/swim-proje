@@ -120,6 +120,26 @@ function App() {
     moveActiveTab(dx < 0 ? 1 : -1);
   }
 
+  function handleTouchStart(event) {
+    if (event.target.closest("button,input,select,textarea,a,.tabs,.controls,.memberFilterBar,.eventFilterBar,.meetModeTabs,.modalBackdrop")) {
+      swipeStartRef.current = null;
+      return;
+    }
+    const touch = event.touches[0];
+    swipeStartRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
+  }
+
+  function handleTouchEnd(event) {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    const touch = event.changedTouches[0];
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
+    moveActiveTab(dx < 0 ? 1 : -1);
+  }
+
   useEffect(() => {
     let cancelled = false;
     loadBoardState()
@@ -178,6 +198,8 @@ function App() {
       onPointerCancel={() => {
         swipeStartRef.current = null;
       }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {error ? (
         <div className="notice" role="status">

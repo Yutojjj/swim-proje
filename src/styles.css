@@ -32,11 +32,15 @@ button {
 .app {
   width: min(1120px, calc(100% - 24px));
   --dock-width: min(1120px, calc(100% - 16px));
-  --tab-height: 42px;
-  --control-dock-height: 54px;
+  --tab-height: 38px;
+  --control-dock-height: 48px;
   margin: 0 auto;
-  padding: 8px 0 214px;
-  touch-action: pan-y;
+  padding: 144px 0 16px;
+  touch-action: pan-y pan-x;
+}
+
+.app.tab-times {
+  padding-top: 270px;
 }
 
 .eyebrow {
@@ -123,7 +127,7 @@ h1 {
 .controls {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 8px);
+  top: calc(var(--tab-height) + env(safe-area-inset-top) + 4px);
   z-index: 17;
   width: var(--dock-width);
   display: flex;
@@ -131,11 +135,11 @@ h1 {
   justify-content: space-between;
   gap: 10px;
   margin: 0;
-  padding: 6px;
+  padding: 4px;
   border: 1px solid rgba(207, 226, 223, 0.92);
   border-radius: 10px;
   background: rgba(247, 251, 251, 0.94);
-  box-shadow: 0 -10px 28px rgba(16, 35, 34, 0.12);
+  box-shadow: 0 8px 22px rgba(16, 35, 34, 0.1);
   transform: translateX(-50%);
   transition: transform 180ms ease, opacity 180ms ease;
   backdrop-filter: blur(10px);
@@ -185,7 +189,8 @@ h1 {
 .tabs {
   position: fixed;
   left: 50%;
-  bottom: 0;
+  top: env(safe-area-inset-top);
+  bottom: auto;
   z-index: 18;
   width: min(1120px, calc(100% - 16px));
   transform: translateX(-50%);
@@ -194,10 +199,10 @@ h1 {
   gap: 2px;
   padding: 2px;
   border: 1px solid #d6e8e6;
-  border-bottom: 0;
-  border-radius: 8px 8px 0 0;
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 -5px 16px rgba(16, 35, 34, 0.1);
+  box-shadow: 0 6px 16px rgba(16, 35, 34, 0.1);
 }
 
 .tabs button {
@@ -221,7 +226,7 @@ h1 {
 .app.dockHidden .meetModeTabs {
   opacity: 0;
   pointer-events: none;
-  transform: translate(-50%, calc(100% + 90px));
+  transform: translate(-50%, calc(-100% - 16px));
 }
 
 .memberGrid {
@@ -233,18 +238,18 @@ h1 {
 .memberFilterBar {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--tab-height) + var(--control-dock-height) + env(safe-area-inset-bottom) + 16px);
+  top: calc(var(--tab-height) + var(--control-dock-height) + env(safe-area-inset-top) + 8px);
   z-index: 16;
   width: var(--dock-width);
   display: grid;
   grid-template-columns: 0.78fr 0.78fr 0.78fr auto;
   gap: 5px;
   margin: 0;
-  padding: 6px;
+  padding: 4px;
   border: 1px solid rgba(207, 226, 223, 0.92);
   border-radius: 10px;
   background: rgba(247, 251, 251, 0.94);
-  box-shadow: 0 -8px 22px rgba(16, 35, 34, 0.1);
+  box-shadow: 0 8px 22px rgba(16, 35, 34, 0.1);
   transform: translateX(-50%);
   transition: transform 180ms ease, opacity 180ms ease;
   backdrop-filter: blur(10px);
@@ -551,17 +556,17 @@ h1 {
 .eventFilterBar {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 8px);
+  top: calc(var(--tab-height) + env(safe-area-inset-top) + 4px);
   z-index: 16;
   width: var(--dock-width);
   max-height: min(42dvh, 260px);
   overflow-y: auto;
   margin: 0;
-  padding: 6px;
+  padding: 4px;
   border: 1px solid rgba(207, 226, 223, 0.92);
   border-radius: 10px;
   background: rgba(247, 251, 251, 0.94);
-  box-shadow: 0 -8px 22px rgba(16, 35, 34, 0.1);
+  box-shadow: 0 8px 22px rgba(16, 35, 34, 0.1);
   transform: translateX(-50%);
   transition: transform 180ms ease, opacity 180ms ease;
   backdrop-filter: blur(10px);
@@ -862,7 +867,7 @@ h1 {
 .meetModeTabs {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--tab-height) + var(--control-dock-height) + env(safe-area-inset-bottom) + 16px);
+  top: calc(var(--tab-height) + var(--control-dock-height) + env(safe-area-inset-top) + 8px);
   z-index: 16;
   width: var(--dock-width);
   display: grid;
@@ -873,7 +878,7 @@ h1 {
   border: 1px solid #cfe2df;
   border-radius: 10px;
   background: rgba(238, 247, 245, 0.94);
-  box-shadow: 0 -8px 22px rgba(16, 35, 34, 0.1);
+  box-shadow: 0 8px 22px rgba(16, 35, 34, 0.1);
   transform: translateX(-50%);
   transition: transform 180ms ease, opacity 180ms ease;
   backdrop-filter: blur(10px);
@@ -1615,8 +1620,12 @@ h1 {
 @media (max-width: 760px) {
   .app {
     width: min(100% - 16px, 1120px);
-    padding-top: 8px;
-    padding-bottom: 244px;
+    padding-top: 140px;
+    padding-bottom: 16px;
+  }
+
+  .app.tab-times {
+    padding-top: 286px;
   }
 
   .controls {
