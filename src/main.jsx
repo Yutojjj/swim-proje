@@ -281,21 +281,19 @@ function App() {
         </div>
       ) : null}
 
-      {activeTab !== "times" ? (
-        <div className="controls">
-          <label className="searchBox">
-            <Search size={18} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="選手名・大会名で検索" />
-          </label>
-          <button className="syncButton compactSyncButton" onClick={() => handleSync()} disabled={isSyncing}>
-            <RefreshCcw size={16} className={isSyncing ? "spin" : ""} />
-            <span>{isSyncing ? "更新中" : "更新"}</span>
-          </button>
-          <button className="settingsButton" onClick={() => setSettingsOpen(true)} aria-label="設定">
-            <Settings size={16} />
-          </button>
-        </div>
-      ) : null}
+      <div className="controls">
+        <label className="searchBox">
+          <Search size={18} />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="選手名・大会名で検索" />
+        </label>
+        <button className="syncButton compactSyncButton" onClick={() => handleSync()} disabled={isSyncing}>
+          <RefreshCcw size={16} className={isSyncing ? "spin" : ""} />
+          <span>{isSyncing ? "更新中" : "更新"}</span>
+        </button>
+        <button className="settingsButton" onClick={() => setSettingsOpen(true)} aria-label="設定">
+          <Settings size={16} />
+        </button>
+      </div>
 
       <nav className="tabs" aria-label="画面切り替え">
         {tabs.map((tab) => {
@@ -328,7 +326,7 @@ function App() {
           </section>
           <section className={`swipePane ${activeTab === "times" ? "activePane" : ""}`} aria-hidden={activeTab !== "times"}>
             <TimesView
-              records={state.recentResults}
+              records={filteredRecords}
               memberPhotos={state.memberPhotos || {}}
               memberReadings={state.memberReadings || {}}
               archivedMembers={state.archivedMembers || []}
