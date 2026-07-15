@@ -1,0 +1,10 @@
+.env
+.env.local
+.env.*.local
+node_modules/
+dist/
+.vercel/
+*.log
+RS_Kenneys_Record_App_Diagnostic_Summary.md
+*_診断用まとめ.md
+

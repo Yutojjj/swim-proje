@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "api/tdsystem-records.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/tdsystem-records",
+      "destination": "/api/tdsystem-records.js"
+    }
+  ]
+}
+

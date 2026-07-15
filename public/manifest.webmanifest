@@ -1,0 +1,17 @@
+{
+  "name": "RSケーニーズ 記録ボード",
+  "short_name": "RS記録",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7fbfb",
+  "theme_color": "#0f766e",
+  "description": "TDSYSTEMの参加チーム記録からRSケーニーズの記録を確認します。",
+  "icons": [
+    {
+      "src": "/icons/app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
