@@ -907,7 +907,7 @@ h1 {
   margin-bottom: 2px;
   overflow: hidden;
   color: #607a77;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
   line-height: 1;
   text-overflow: ellipsis;
@@ -1769,6 +1769,10 @@ h1 {
   .memberReading {
     font-size: 7px;
     margin-bottom: 2px;
+  }
+
+  .timeCardReading {
+    font-size: 7px;
   }
 
   .memberFacts {

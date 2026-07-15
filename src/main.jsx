@@ -32,9 +32,11 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isDockHidden, setIsDockHidden] = useState(false);
   const [swipeVisual, setSwipeVisual] = useState({ offset: 0, animating: false });
+  const appRef = useRef(null);
   const swipeSurfaceRef = useRef(null);
   const swipeStartRef = useRef(null);
   const swipeFrameRef = useRef(0);
+  const queryReadyRef = useRef(false);
   const activeTabIndex = Math.max(0, tabs.findIndex((tab) => tab.id === activeTab));
 
   const filteredRecords = useMemo(() => {
@@ -202,8 +204,19 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!queryReadyRef.current) {
+      queryReadyRef.current = true;
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+  }, [query]);
+
+  useEffect(() => {
+    const gestureArea = appRef.current;
     const surface = swipeSurfaceRef.current;
-    if (!surface) return undefined;
+    if (!gestureArea || !surface) return undefined;
 
     function touchStart(event) {
       if (!event.touches.length || shouldIgnoreSwipe(event.target)) {
@@ -271,20 +284,20 @@ function App() {
       snapSwipeBack();
     }
 
-    surface.addEventListener("touchstart", touchStart, { passive: true });
-    surface.addEventListener("touchmove", touchMove, { passive: false });
-    surface.addEventListener("touchend", touchEnd, { passive: true });
-    surface.addEventListener("touchcancel", touchCancel, { passive: true });
+    gestureArea.addEventListener("touchstart", touchStart, { passive: true });
+    gestureArea.addEventListener("touchmove", touchMove, { passive: false });
+    gestureArea.addEventListener("touchend", touchEnd, { passive: true });
+    gestureArea.addEventListener("touchcancel", touchCancel, { passive: true });
     return () => {
-      surface.removeEventListener("touchstart", touchStart);
-      surface.removeEventListener("touchmove", touchMove);
-      surface.removeEventListener("touchend", touchEnd);
-      surface.removeEventListener("touchcancel", touchCancel);
+      gestureArea.removeEventListener("touchstart", touchStart);
+      gestureArea.removeEventListener("touchmove", touchMove);
+      gestureArea.removeEventListener("touchend", touchEnd);
+      gestureArea.removeEventListener("touchcancel", touchCancel);
     };
   }, [activeTab]);
 
   return (
-    <main className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}>
+    <main ref={appRef} className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}>
       {error ? (
         <div className="notice" role="status">
           <WifiOff size={18} />
