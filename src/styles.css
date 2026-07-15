@@ -35,12 +35,12 @@ button {
   --tab-height: 38px;
   --control-dock-height: 52px;
   margin: 0 auto;
-  padding: calc(var(--tab-height) + 10px) 0 214px;
+  padding: calc(var(--tab-height) + 10px) 0 calc(122px + env(safe-area-inset-bottom));
   touch-action: pan-y;
 }
 
 .app.tab-times {
-  padding-bottom: 286px;
+  padding-bottom: calc(158px + env(safe-area-inset-bottom));
 }
 
 .swipeSurface {
@@ -73,8 +73,13 @@ button {
 
 .swipePane:not(.activePane) {
   height: 0;
-  overflow: visible;
+  overflow: hidden;
   pointer-events: none;
+}
+
+.swipeSurface.swipeDragging .swipePane:not(.activePane) {
+  height: auto;
+  overflow: visible;
 }
 
 .swipePane:not(.activePane) .memberFilterBar,
@@ -1697,11 +1702,11 @@ h1 {
   .app {
     width: min(100% - 16px, 1120px);
     padding-top: calc(var(--tab-height) + 8px);
-    padding-bottom: 252px;
+    padding-bottom: calc(122px + env(safe-area-inset-bottom));
   }
 
   .app.tab-times {
-    padding-bottom: 308px;
+    padding-bottom: calc(158px + env(safe-area-inset-bottom));
   }
 
   .controls {
