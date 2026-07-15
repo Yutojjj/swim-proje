@@ -269,10 +269,7 @@ h1 {
   background: #0f766e;
 }
 
-.app.dockHidden .controls,
-.app.dockHidden .memberFilterBar,
-.app.dockHidden .eventFilterBar,
-.app.dockHidden .meetModeTabs {
+.app.dockHidden .controls {
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, calc(100% + 90px));
@@ -1677,11 +1674,11 @@ h1 {
   .app {
     width: min(100% - 16px, 1120px);
     padding-top: calc(var(--tab-height) + 8px);
-    padding-bottom: 244px;
+    padding-bottom: 252px;
   }
 
   .app.tab-times {
-    padding-bottom: 300px;
+    padding-bottom: 308px;
   }
 
   .controls {
@@ -1748,7 +1745,7 @@ h1 {
 
   .memberFacts {
     gap: 2px;
-    font-size: 8px;
+    font-size: min(8px, 2.1vw);
   }
 
   .memberFacts span {
@@ -1893,11 +1890,21 @@ h1 {
 @media (max-width: 390px) {
   .memberFacts {
     gap: 1px;
-    font-size: 7px;
+    font-size: min(7px, 1.85vw);
   }
 
   .memberFacts span {
     padding: 2px;
+  }
+}
+
+@media (max-width: 360px) {
+  .memberFacts {
+    font-size: 6px;
+  }
+
+  .memberFacts span {
+    padding: 1px 2px;
   }
 }
 
