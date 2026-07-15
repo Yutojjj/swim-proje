@@ -31,8 +31,11 @@ function App() {
   const [error, setError] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isDockHidden, setIsDockHidden] = useState(false);
+  const [swipeVisual, setSwipeVisual] = useState({ offset: 0, animating: false });
   const swipeSurfaceRef = useRef(null);
   const swipeStartRef = useRef(null);
+  const swipeFrameRef = useRef(0);
+  const activeTabIndex = tabs.findIndex((tab) => tab.id === activeTab);
 
   const filteredRecords = useMemo(() => {
     const needle = normalizeSearchText(query);
@@ -98,6 +101,41 @@ function App() {
     const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
     const nextIndex = clamp(currentIndex + direction, 0, tabs.length - 1);
     if (nextIndex !== currentIndex) setActiveTab(tabs[nextIndex].id);
+  }
+
+  function setSwipeOffset(offset, animating = false) {
+    if (swipeFrameRef.current) window.cancelAnimationFrame(swipeFrameRef.current);
+    swipeFrameRef.current = window.requestAnimationFrame(() => {
+      setSwipeVisual({ offset, animating });
+      swipeFrameRef.current = 0;
+    });
+  }
+
+  function snapSwipeBack() {
+    setSwipeVisual({ offset: 0, animating: true });
+    window.setTimeout(() => setSwipeVisual({ offset: 0, animating: false }), 220);
+  }
+
+  function animateTabSwipe(direction, width) {
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
+    const nextIndex = clamp(currentIndex + direction, 0, tabs.length - 1);
+    if (nextIndex === currentIndex) {
+      snapSwipeBack();
+      return;
+    }
+    const exitOffset = direction > 0 ? -width : width;
+    const enterOffset = direction > 0 ? width : -width;
+    setSwipeVisual({ offset: exitOffset, animating: true });
+    window.setTimeout(() => {
+      setActiveTab(tabs[nextIndex].id);
+      setSwipeVisual({ offset: enterOffset, animating: false });
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          setSwipeVisual({ offset: 0, animating: true });
+          window.setTimeout(() => setSwipeVisual({ offset: 0, animating: false }), 220);
+        });
+      });
+    }, 150);
   }
 
   function shouldIgnoreSwipe(target) {
@@ -190,27 +228,38 @@ function App() {
       }
       if (start.locked !== "h") return;
       event.preventDefault();
-      start.deltaX = dx;
+      const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
+      const atFirst = currentIndex <= 0 && dx > 0;
+      const atLast = currentIndex >= tabs.length - 1 && dx < 0;
+      const visualOffset = atFirst || atLast ? dx * 0.22 : dx;
+      start.deltaX = visualOffset;
       start.dragging = true;
+      setSwipeOffset(visualOffset, false);
     }
 
     function touchEnd() {
       const start = swipeStartRef.current;
       swipeStartRef.current = null;
-      if (!start || !start.dragging) return;
+      if (!start || !start.dragging) {
+        snapSwipeBack();
+        return;
+      }
       const elapsed = Math.max(Date.now() - start.time, 1);
       const width = surface.offsetWidth || window.innerWidth;
       const threshold = Math.min(width * 0.24, 96);
       const velocity = Math.abs(start.deltaX) / elapsed;
       if (start.deltaX < -threshold || (velocity > 0.48 && start.deltaX < -30)) {
-        moveActiveTab(1);
+        animateTabSwipe(1, width);
       } else if (start.deltaX > threshold || (velocity > 0.48 && start.deltaX > 30)) {
-        moveActiveTab(-1);
+        animateTabSwipe(-1, width);
+      } else {
+        snapSwipeBack();
       }
     }
 
     function touchCancel() {
       swipeStartRef.current = null;
+      snapSwipeBack();
     }
 
     surface.addEventListener("touchstart", touchStart, { passive: true });
@@ -260,7 +309,13 @@ function App() {
         })}
       </nav>
 
-      <div className="swipeSurface" ref={swipeSurfaceRef}>
+      <div
+        className={`swipeSurface ${swipeVisual.animating ? "swipeAnimating" : ""} ${swipeVisual.offset ? "swipeDragging" : ""}`}
+        ref={swipeSurfaceRef}
+        style={{ "--swipe-offset": `${swipeVisual.offset}px` }}
+      >
+        <span className="swipeEdgeHint swipeEdgeHintPrev">{tabs[activeTabIndex - 1]?.label || ""}</span>
+        <span className="swipeEdgeHint swipeEdgeHintNext">{tabs[activeTabIndex + 1]?.label || ""}</span>
         {activeTab === "members" ? (
           <MembersView
             records={filteredRecords}

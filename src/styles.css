@@ -44,8 +44,51 @@ button {
 }
 
 .swipeSurface {
+  position: relative;
   min-height: calc(100dvh - var(--tab-height) - 20px);
   touch-action: pan-y;
+  transform: translate3d(var(--swipe-offset, 0), 0, 0);
+  will-change: transform;
+}
+
+.swipeSurface.swipeAnimating {
+  transition: transform 0.22s cubic-bezier(0.22, 0.72, 0.25, 1);
+}
+
+.swipeEdgeHint {
+  position: fixed;
+  top: 50%;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: 999px;
+  color: #0f766e;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 24px rgba(16, 35, 34, 0.12);
+  font-size: 12px;
+  font-weight: 900;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity 0.12s ease;
+  backdrop-filter: blur(8px);
+}
+
+.swipeEdgeHintPrev {
+  left: 8px;
+}
+
+.swipeEdgeHintNext {
+  right: 8px;
+}
+
+.swipeSurface.swipeDragging .swipeEdgeHint {
+  opacity: 0.78;
 }
 
 .eyebrow {
