@@ -52,17 +52,18 @@ button {
 }
 
 .swipeTrack {
+  position: relative;
   display: flex;
   width: 100%;
   min-height: calc(100dvh - var(--tab-height) - 20px);
   height: calc(100dvh - var(--tab-height) - 20px);
   align-items: flex-start;
-  transform: translate3d(calc(var(--track-index-offset, 0%) + var(--swipe-offset, 0px)), 0, 0);
-  will-change: transform;
+  left: calc(var(--track-index-offset, 0%) + var(--swipe-offset, 0px));
+  will-change: left;
 }
 
 .swipeTrack.swipeAnimating {
-  transition: transform 0.22s cubic-bezier(0.22, 0.72, 0.25, 1);
+  transition: left 0.22s cubic-bezier(0.22, 0.72, 0.25, 1);
 }
 
 .swipePane {
