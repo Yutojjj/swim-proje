@@ -495,17 +495,21 @@ h1 {
 
 .memberFacts {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 4px;
   font-size: 10px;
 }
 
 .memberFacts span {
+  flex: 0 1 auto;
+  min-width: 0;
   padding: 3px 5px;
   border-radius: 6px;
   color: #37514f;
   background: rgba(237, 247, 245, 0.9);
   font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .memberCard.hasPhoto .memberFacts span {
@@ -1743,12 +1747,12 @@ h1 {
   }
 
   .memberFacts {
-    gap: 3px;
-    font-size: 9px;
+    gap: 2px;
+    font-size: 8px;
   }
 
   .memberFacts span {
-    padding: 2px 4px;
+    padding: 2px 3px;
   }
 
   .bestUpdateBadge {
@@ -1883,6 +1887,17 @@ h1 {
 
   .recordTime {
     font-size: 18px;
+  }
+}
+
+@media (max-width: 390px) {
+  .memberFacts {
+    gap: 1px;
+    font-size: 7px;
+  }
+
+  .memberFacts span {
+    padding: 2px;
   }
 }
 
