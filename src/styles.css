@@ -31,6 +31,7 @@ button {
 
 .app {
   width: min(1120px, calc(100% - 24px));
+  min-height: 100dvh;
   --dock-width: min(1120px, calc(100% - 16px));
   --tab-height: 38px;
   --control-dock-height: 52px;
@@ -907,7 +908,7 @@ h1 {
   margin-bottom: 2px;
   overflow: hidden;
   color: #607a77;
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 800;
   line-height: 1;
   text-overflow: ellipsis;

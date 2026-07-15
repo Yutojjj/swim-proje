@@ -32,7 +32,6 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isDockHidden, setIsDockHidden] = useState(false);
   const [swipeVisual, setSwipeVisual] = useState({ offset: 0, animating: false });
-  const appRef = useRef(null);
   const swipeSurfaceRef = useRef(null);
   const swipeStartRef = useRef(null);
   const swipeFrameRef = useRef(0);
@@ -208,13 +207,23 @@ function App() {
       queryReadyRef.current = true;
       return;
     }
-    window.requestAnimationFrame(() => {
+    function resetListScroll() {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    });
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+    }
+    resetListScroll();
+    const frame = window.requestAnimationFrame(resetListScroll);
+    const keyboardTimer = window.setTimeout(resetListScroll, 120);
+    const settleTimer = window.setTimeout(resetListScroll, 320);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(keyboardTimer);
+      window.clearTimeout(settleTimer);
+    };
   }, [query]);
 
   useEffect(() => {
-    const gestureArea = appRef.current;
+    const gestureArea = document;
     const surface = swipeSurfaceRef.current;
     if (!gestureArea || !surface) return undefined;
 
@@ -297,7 +306,7 @@ function App() {
   }, [activeTab]);
 
   return (
-    <main ref={appRef} className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}>
+    <main className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}>
       {error ? (
         <div className="notice" role="status">
           <WifiOff size={18} />
