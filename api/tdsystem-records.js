@@ -11,7 +11,7 @@ export default async function handler(request, response) {
     const result = await scrapeTdsystemRecords({
       team: request.query.team || "RSケーニーズ",
       source: request.query.source || "https://www.tdsystem.co.jp/",
-      limitMeets: Number(request.query.limitMeets || 240),
+      limitMeets: Number(request.query.limitMeets || 90),
       months: Number(request.query.months || 12),
       futureMonths: Number(request.query.futureMonths || 6)
     });
@@ -22,4 +22,3 @@ export default async function handler(request, response) {
     response.status(502).json({ records: [], upcomingMeets: [], error: error.message });
   }
 }
-

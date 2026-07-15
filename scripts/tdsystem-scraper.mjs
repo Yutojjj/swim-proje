@@ -3,8 +3,9 @@ import { fileURLToPath } from "node:url";
 const BASE_URL = "https://www.tdsystem.co.jp/";
 const DEFAULT_TEAM = "RSケーニーズ";
 const TEAM_ALIASES = ["RSケーニーズ", "ＲＳケーニーズ", "RSｹｰﾆｰｽﾞ", "ＲＳｹｰﾆｰｽﾞ", "ケーニーズ", "ｹｰﾆｰｽﾞ"];
-const MAX_MEETS = 24;
-const REQUEST_DELAY_MS = 120;
+const MAX_MEETS = 90;
+const REQUEST_DELAY_MS = 0;
+const MEET_CONCURRENCY = 8;
 
 export async function scrapeTdsystemRecords({ team = DEFAULT_TEAM, source = BASE_URL, limitMeets = MAX_MEETS, months = 12, futureMonths = 6 } = {}) {
   const meetLinks = await collectMeetLinks({ source, months, futureMonths, limitMeets });
@@ -13,8 +14,7 @@ export async function scrapeTdsystemRecords({ team = DEFAULT_TEAM, source = BASE
   const upcomingMeets = [];
   const today = formatDateForCompare(new Date());
 
-  for (const meetLink of meetLinks) {
-    await delay(REQUEST_DELAY_MS);
+  await mapWithConcurrency(meetLinks, MEET_CONCURRENCY, async (meetLink) => {
     const teamListUrl = withSearchParams(meetLink.href, { L: "2" });
     const teamListHtml = await fetchText(teamListUrl);
     const meet = parseMeetInfo(teamListHtml, meetLink);
@@ -32,16 +32,16 @@ export async function scrapeTdsystemRecords({ team = DEFAULT_TEAM, source = BASE
         teamFound: Boolean(teamProgram),
         status: "upcoming"
       });
-      continue;
+      return;
     }
 
-    if (!teamProgram) continue;
+    if (!teamProgram) return;
 
     await delay(REQUEST_DELAY_MS);
     const recordUrl = buildRecordUrl(meetLink.href, teamProgram.p, "2");
     const recordHtml = await fetchText(recordUrl);
     records.push(...parseRecordRows(recordHtml, { meet, recordUrl, team }));
-  }
+  });
 
   return {
     team,
@@ -310,6 +310,17 @@ function stableId(parts) {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function mapWithConcurrency(items, concurrency, worker) {
+  const queue = [...items];
+  const runners = Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
+    while (queue.length) {
+      const item = queue.shift();
+      await worker(item);
+    }
+  });
+  await Promise.all(runners);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

@@ -40,7 +40,8 @@ const defaultState = {
     sourceUrl: "https://www.tdsystem.co.jp/",
     proxyUrl: import.meta.env.VITE_TDSYSTEM_PROXY_URL || "/api/tdsystem-records",
     syncMonths: 12,
-    futureMonths: 6
+    futureMonths: 6,
+    limitMeets: 90
   },
   recentResults: demoRecentResults,
   bestRecords: buildBestRecords(demoRecentResults),
@@ -109,6 +110,7 @@ async function fetchViaProxy(settings) {
   url.searchParams.set("team", settings.teamName);
   url.searchParams.set("months", String(settings.syncMonths || 12));
   url.searchParams.set("futureMonths", String(settings.futureMonths || 6));
+  url.searchParams.set("limitMeets", String(settings.limitMeets || 90));
 
   const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
   if (!response.ok) {
