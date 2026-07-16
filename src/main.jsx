@@ -186,6 +186,9 @@ function App() {
   }, [state.settings.refreshMinutes]);
 
   useEffect(() => {
+    if ("caches" in window) {
+      caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))));
+    }
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").then((registration) => {
         registration.update();
