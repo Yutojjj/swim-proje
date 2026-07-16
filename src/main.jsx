@@ -31,6 +31,7 @@ function App() {
   const [error, setError] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isDockHidden, setIsDockHidden] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [swipeVisual, setSwipeVisual] = useState({ offset: 0, animating: false });
   const swipeSurfaceRef = useRef(null);
   const swipeStartRef = useRef(null);
@@ -239,7 +240,13 @@ function App() {
     const viewport = window.visualViewport;
     if (!viewport) return undefined;
     function keepResultsAtTop() {
-      if (!searchFocusedRef.current) return;
+      if (!searchFocusedRef.current) {
+        setKeyboardOffset(0);
+        return;
+      }
+      const layoutHeight = Math.max(window.innerHeight, document.documentElement.clientHeight);
+      const visibleBottom = viewport.height + viewport.offsetTop;
+      setKeyboardOffset(Math.max(0, Math.round(layoutHeight - visibleBottom)));
       resetSearchScroll();
       window.requestAnimationFrame(resetSearchScroll);
     }
@@ -335,7 +342,10 @@ function App() {
   }, [activeTab]);
 
   return (
-    <main className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}>
+    <main
+      className={`app tab-${activeTab} ${isDockHidden ? "dockHidden" : ""}`}
+      style={{ "--keyboard-offset": `${keyboardOffset}px` }}
+    >
       {error ? (
         <div className="notice" role="status">
           <WifiOff size={18} />
@@ -353,9 +363,16 @@ function App() {
               searchFocusedRef.current = true;
               setIsDockHidden(false);
               settleSearchScroll();
+              window.setTimeout(() => {
+                const viewport = window.visualViewport;
+                if (!viewport) return;
+                const layoutHeight = Math.max(window.innerHeight, document.documentElement.clientHeight);
+                setKeyboardOffset(Math.max(0, Math.round(layoutHeight - viewport.height - viewport.offsetTop)));
+              }, 80);
             }}
             onBlur={() => {
               searchFocusedRef.current = false;
+              setKeyboardOffset(0);
             }}
             enterKeyHint="search"
             placeholder="選手名・大会名で検索"
