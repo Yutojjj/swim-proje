@@ -1,4 +1,4 @@
-const CACHE_NAME = "rs-kenneys-records-v4";
+const CACHE_NAME = "rs-kenneys-records-v5";
 const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icons/app-icon.png"];
 
 self.addEventListener("install", (event) => {

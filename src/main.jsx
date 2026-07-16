@@ -36,7 +36,21 @@ function App() {
   const swipeStartRef = useRef(null);
   const swipeFrameRef = useRef(0);
   const queryReadyRef = useRef(false);
+  const searchFocusedRef = useRef(false);
+  const searchScrollTimersRef = useRef([]);
   const activeTabIndex = Math.max(0, tabs.findIndex((tab) => tab.id === activeTab));
+
+  function resetSearchScroll() {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
+  function settleSearchScroll() {
+    searchScrollTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    resetSearchScroll();
+    searchScrollTimersRef.current = [80, 220, 500, 800].map((delay) => window.setTimeout(resetSearchScroll, delay));
+  }
 
   const filteredRecords = useMemo(() => {
     const needle = normalizeSearchText(query);
@@ -207,20 +221,27 @@ function App() {
       queryReadyRef.current = true;
       return;
     }
-    function resetListScroll() {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
-    }
-    resetListScroll();
-    const frame = window.requestAnimationFrame(resetListScroll);
-    const keyboardTimer = window.setTimeout(resetListScroll, 120);
-    const settleTimer = window.setTimeout(resetListScroll, 320);
+    settleSearchScroll();
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(keyboardTimer);
-      window.clearTimeout(settleTimer);
+      searchScrollTimersRef.current.forEach((timer) => window.clearTimeout(timer));
     };
   }, [query]);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return undefined;
+    function keepResultsAtTop() {
+      if (!searchFocusedRef.current) return;
+      resetSearchScroll();
+      window.requestAnimationFrame(resetSearchScroll);
+    }
+    viewport.addEventListener("resize", keepResultsAtTop);
+    viewport.addEventListener("scroll", keepResultsAtTop);
+    return () => {
+      viewport.removeEventListener("resize", keepResultsAtTop);
+      viewport.removeEventListener("scroll", keepResultsAtTop);
+    };
+  }, []);
 
   useEffect(() => {
     const gestureArea = document;
@@ -317,7 +338,19 @@ function App() {
       <div className="controls">
         <label className="searchBox">
           <Search size={18} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="選手名・大会名で検索" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onFocus={() => {
+              searchFocusedRef.current = true;
+              settleSearchScroll();
+            }}
+            onBlur={() => {
+              searchFocusedRef.current = false;
+            }}
+            enterKeyHint="search"
+            placeholder="選手名・大会名で検索"
+          />
         </label>
         <button className="syncButton compactSyncButton" onClick={() => handleSync()} disabled={isSyncing}>
           <RefreshCcw size={16} className={isSyncing ? "spin" : ""} />

@@ -4,6 +4,8 @@
   background: #f7fbfb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 * {
@@ -908,9 +910,11 @@ h1 {
   margin-bottom: 2px;
   overflow: hidden;
   color: #607a77;
-  font-size: 7px;
-  font-weight: 800;
+  font-size: 7px !important;
+  font-weight: 700;
   line-height: 1;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
