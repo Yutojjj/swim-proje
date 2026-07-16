@@ -1455,14 +1455,13 @@ h1 {
 }
 
 .recordTableRow strong {
-  display: -webkit-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: block;
+  overflow: visible;
+  text-overflow: clip;
   white-space: normal;
   font-size: 13px;
   line-height: 1.25;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 
 .recordTime {
