@@ -1422,8 +1422,8 @@ h1 {
 .recordTableHeader,
 .recordTableRow {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr) 92px 56px;
-  gap: 8px;
+  grid-template-columns: 104px minmax(0, 1fr) 110px 34px;
+  gap: 6px;
   align-items: center;
 }
 
@@ -1450,11 +1450,19 @@ h1 {
   font-size: 12px;
 }
 
+.recordTableRow time {
+  white-space: nowrap;
+}
+
 .recordTableRow strong {
+  display: -webkit-box;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
   font-size: 13px;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .recordTime {
@@ -1462,10 +1470,12 @@ h1 {
   font-size: 20px;
   font-weight: 800;
   text-align: right;
+  white-space: nowrap;
 }
 
 .recordRank {
   text-align: right;
+  white-space: nowrap;
 }
 
 .meetRecords {
@@ -1969,12 +1979,20 @@ h1 {
 
   .recordTableHeader,
   .recordTableRow {
-    grid-template-columns: 72px minmax(0, 1fr) 86px 46px;
-    gap: 6px;
+    grid-template-columns: 90px minmax(0, 1fr) 98px 28px;
+    gap: 4px;
+  }
+
+  .recordTableRow time {
+    font-size: 10px;
   }
 
   .recordTime {
-    font-size: 18px;
+    font-size: clamp(15px, 4.3vw, 18px);
+  }
+
+  .recordRank {
+    font-size: 10px;
   }
 }
 
