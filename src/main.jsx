@@ -34,6 +34,7 @@ function App() {
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [swipeVisual, setSwipeVisual] = useState({ offset: 0, animating: false });
   const swipeSurfaceRef = useRef(null);
+  const swipeTrackRef = useRef(null);
   const swipeStartRef = useRef(null);
   const swipeFrameRef = useRef(0);
   const queryReadyRef = useRef(false);
@@ -130,14 +131,23 @@ function App() {
   function setSwipeOffset(offset, animating = false) {
     if (swipeFrameRef.current) window.cancelAnimationFrame(swipeFrameRef.current);
     swipeFrameRef.current = window.requestAnimationFrame(() => {
-      setSwipeVisual({ offset, animating });
+      const track = swipeTrackRef.current;
+      const surface = swipeSurfaceRef.current;
+      if (track) {
+        track.style.setProperty("--swipe-offset", `${offset}px`);
+        track.classList.toggle("swipeAnimating", animating);
+      }
+      surface?.classList.toggle("swipeDragging", Math.abs(offset) > 0.5);
       swipeFrameRef.current = 0;
     });
   }
 
   function snapSwipeBack() {
-    setSwipeVisual({ offset: 0, animating: true });
-    window.setTimeout(() => setSwipeVisual({ offset: 0, animating: false }), 220);
+    setSwipeOffset(0, true);
+    window.setTimeout(() => {
+      swipeTrackRef.current?.classList.remove("swipeAnimating");
+      swipeSurfaceRef.current?.classList.remove("swipeDragging");
+    }, 220);
   }
 
   function animateTabSwipe(direction) {
@@ -147,9 +157,22 @@ function App() {
       snapSwipeBack();
       return;
     }
+    if (swipeFrameRef.current) {
+      window.cancelAnimationFrame(swipeFrameRef.current);
+      swipeFrameRef.current = 0;
+    }
+    const track = swipeTrackRef.current;
+    if (track) {
+      track.classList.add("swipeAnimating");
+      track.style.setProperty("--swipe-offset", "0px");
+    }
     setSwipeVisual({ offset: 0, animating: true });
     setActiveTab(tabs[nextIndex].id);
-    window.setTimeout(() => setSwipeVisual({ offset: 0, animating: false }), 240);
+    window.setTimeout(() => {
+      setSwipeVisual({ offset: 0, animating: false });
+      swipeTrackRef.current?.classList.remove("swipeAnimating");
+      swipeSurfaceRef.current?.classList.remove("swipeDragging");
+    }, 240);
   }
 
   function shouldIgnoreSwipe(target) {
@@ -399,6 +422,7 @@ function App() {
 
       <div className={`swipeSurface ${swipeVisual.offset ? "swipeDragging" : ""}`} ref={swipeSurfaceRef}>
         <div
+          ref={swipeTrackRef}
           className={`swipeTrack ${swipeVisual.animating ? "swipeAnimating" : ""}`}
           style={{
             "--track-index-offset": `${activeTabIndex * -100}%`,
