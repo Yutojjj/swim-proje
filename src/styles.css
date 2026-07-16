@@ -1338,11 +1338,17 @@ h1 {
 .eventBestMeta {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 82px 52px minmax(0, 1fr);
+  grid-template-columns: max-content max-content minmax(0, 1fr);
   gap: 8px;
   margin-top: 2px;
   color: #5c6f6d;
   font-size: 12px;
+}
+
+.eventBestMeta time,
+.eventBestMeta span {
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .historyHint {
@@ -1876,8 +1882,8 @@ h1 {
   }
 
   .eventBestMeta {
-    grid-template-columns: 72px 42px minmax(0, 1fr);
-    gap: 6px;
+    grid-template-columns: max-content max-content minmax(0, 1fr);
+    gap: 5px;
     font-size: 11px;
   }
 
