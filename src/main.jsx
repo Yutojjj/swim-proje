@@ -208,6 +208,11 @@ function App() {
   useEffect(() => {
     let showTimer = 0;
     function handleScroll() {
+      if (searchFocusedRef.current) {
+        window.clearTimeout(showTimer);
+        setIsDockHidden(false);
+        return;
+      }
       setIsDockHidden(true);
       window.clearTimeout(showTimer);
       showTimer = window.setTimeout(() => setIsDockHidden(false), 260);
@@ -346,6 +351,7 @@ function App() {
             onChange={(event) => setQuery(event.target.value)}
             onFocus={() => {
               searchFocusedRef.current = true;
+              setIsDockHidden(false);
               settleSearchScroll();
             }}
             onBlur={() => {
