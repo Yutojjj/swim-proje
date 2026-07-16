@@ -2,10 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Camera,
+  CalendarDays,
   ImagePlus,
   RefreshCcw,
   Search,
   Settings,
+  Timer,
+  UsersRound,
   WifiOff
 } from "lucide-react";
 import "./styles.css";
@@ -13,9 +16,9 @@ import { loadBoardState, saveBoardState, uploadMemberImage } from "./firebaseSto
 import { getStoredState, saveStoredState, syncRecords } from "./recordSync";
 
 const tabs = [
-  { id: "members", label: "メンバー" },
-  { id: "times", label: "種目" },
-  { id: "meets", label: "大会一覧" }
+  { id: "members", label: "メンバー", icon: UsersRound },
+  { id: "times", label: "種目", icon: Timer },
+  { id: "meets", label: "大会一覧", icon: CalendarDays }
 ];
 const CARD_CROP_ASPECT = 1;
 const NAME_READING_PARTS = [
@@ -35,6 +38,7 @@ function App() {
   const [swipeVisual, setSwipeVisual] = useState({ offset: 0, animating: false });
   const swipeSurfaceRef = useRef(null);
   const swipeTrackRef = useRef(null);
+  const tabsRef = useRef(null);
   const swipeStartRef = useRef(null);
   const swipeFrameRef = useRef(0);
   const queryReadyRef = useRef(false);
@@ -133,9 +137,14 @@ function App() {
     swipeFrameRef.current = window.requestAnimationFrame(() => {
       const track = swipeTrackRef.current;
       const surface = swipeSurfaceRef.current;
+      const tabBar = tabsRef.current;
       if (track) {
         track.style.setProperty("--swipe-offset", `${offset}px`);
         track.classList.toggle("swipeAnimating", animating);
+      }
+      if (tabBar) {
+        tabBar.style.setProperty("--tab-swipe-offset", `${-offset / 3}px`);
+        tabBar.classList.toggle("tabAnimating", animating);
       }
       surface?.classList.toggle("swipeDragging", Math.abs(offset) > 0.5);
       swipeFrameRef.current = 0;
@@ -147,6 +156,7 @@ function App() {
     window.setTimeout(() => {
       swipeTrackRef.current?.classList.remove("swipeAnimating");
       swipeSurfaceRef.current?.classList.remove("swipeDragging");
+      tabsRef.current?.classList.remove("tabAnimating");
     }, 220);
   }
 
@@ -166,12 +176,17 @@ function App() {
       track.classList.add("swipeAnimating");
       track.style.setProperty("--swipe-offset", "0px");
     }
+    if (tabsRef.current) {
+      tabsRef.current.classList.add("tabAnimating");
+      tabsRef.current.style.setProperty("--tab-swipe-offset", "0px");
+    }
     setSwipeVisual({ offset: 0, animating: true });
     setActiveTab(tabs[nextIndex].id);
     window.setTimeout(() => {
       setSwipeVisual({ offset: 0, animating: false });
       swipeTrackRef.current?.classList.remove("swipeAnimating");
       swipeSurfaceRef.current?.classList.remove("swipeDragging");
+      tabsRef.current?.classList.remove("tabAnimating");
     }, 240);
   }
 
@@ -410,10 +425,17 @@ function App() {
         </button>
       </div>
 
-      <nav className="tabs" aria-label="画面切り替え">
+      <nav
+        ref={tabsRef}
+        className={`tabs ${swipeVisual.animating ? "tabAnimating" : ""}`}
+        style={{ "--active-tab-offset": `${activeTabIndex * 100}%`, "--tab-swipe-offset": "0px" }}
+        aria-label="画面切り替え"
+      >
         {tabs.map((tab) => {
+          const TabIcon = tab.icon;
           return (
             <button key={tab.id} className={activeTab === tab.id ? "active" : ""} onClick={() => selectTab(tab.id)}>
+              <TabIcon size={15} strokeWidth={2.2} />
               <span>{tab.label}</span>
             </button>
           );
